@@ -73,20 +73,6 @@ namespace LogicTermDataStructures {
         }
 
     }
-    public class Unify : LogicVerb {
-        public Term l_term {get; set;}
-        public Term r_term {get; set;}
-
-        public Unify(Term l_term, Term r_term) {
-            this.l_term = l_term;
-            this.r_term = r_term;
-        }
-
-        public void Deconstruct(out Term l_term, out Term r_term) {
-            l_term = this.l_term;
-            r_term = this.r_term;
-        }
-    }
 
     public class Clause {
         public Sentence head {get; set;}
