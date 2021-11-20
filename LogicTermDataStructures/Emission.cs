@@ -85,10 +85,10 @@ namespace EmissionDataStructures {
     }
 
 
-    public class Or : EmissionVerb {
+    public class Disjunction : EmissionVerb {
         public EmissionVerb[] arguments {get; set;}
 
-        public Or(EmissionVerb[] arguments){
+        public Disjunction(EmissionVerb[] arguments){
             this.arguments = arguments;
         }
 
@@ -146,17 +146,20 @@ namespace EmissionDataStructures {
         public Sentence head                {get; set;}
         public Variable[] variables         {get; set;}
         public EmissionVerb[] continuations {get; set;}
+        public BoolNum conditions           {get; set;}
         public EmissionVerb body            {get; set;}
         public Context context              {get; set;}
 
         public Procedure(Sentence       head,
                          Variable[]     variables,
                          EmissionVerb[] continuations,
+                         BoolNum        conditions,
                          EmissionVerb   body,
                          Context        context){
             this.head           = head;          
             this.variables      = variables;     
-            this.continuations  = continuations; 
+            this.continuations  = continuations;
+            this.conditions = conditions;
             this.body           = body;
             this.context = context;
 

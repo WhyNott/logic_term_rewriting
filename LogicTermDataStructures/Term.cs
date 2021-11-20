@@ -12,6 +12,11 @@
 
         private static int top_free_id = 0;
 
+        public override int GetHashCode() {
+            return this.id;
+
+        }
+
         public Variable(string name, Context context, bool is_head) {
             this.name = name;
             this.context = context;

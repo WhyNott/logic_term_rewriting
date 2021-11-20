@@ -40,20 +40,20 @@ namespace LogicTermDataStructures {
     }
     
     public class IfElse : LogicVerb {
-        public LogicVerb[] condition_contents {get; set;}
-        public LogicVerb[] if_contents {get; set;}
-        public LogicVerb[] else_contents {get; set;}
+        public LogicVerb condition_contents {get; set;}
+        public LogicVerb if_contents {get; set;}
+        public LogicVerb else_contents {get; set;}
 
-        public IfElse(LogicVerb[] condition_contents,
-                      LogicVerb[] if_contents, LogicVerb[] else_contents){
+        public IfElse(LogicVerb condition_contents,
+                      LogicVerb if_contents, LogicVerb else_contents){
             this.condition_contents = condition_contents;
             this.if_contents = if_contents;
             this.else_contents = else_contents;
         }
 
-        public void Deconstruct(out LogicVerb[] condition_contents,
-                                out LogicVerb[] if_contents,
-                                out LogicVerb[] else_contents){
+        public void Deconstruct(out LogicVerb condition_contents,
+                                out LogicVerb if_contents,
+                                out LogicVerb else_contents){
             condition_contents = this.condition_contents;
             if_contents        = this.if_contents;
             else_contents      = this.else_contents;
@@ -62,13 +62,13 @@ namespace LogicTermDataStructures {
     }
     
     public class Not : LogicVerb {
-        public LogicVerb[] contents {get; set;}
+        public LogicVerb contents {get; set;}
 
-        public Not(LogicVerb[] contents){
+        public Not(LogicVerb contents){
             this.contents = contents;
         }
 
-        public void Deconstruct(out LogicVerb[] contents){
+        public void Deconstruct(out LogicVerb contents){
             contents = this.contents;
         }
 
