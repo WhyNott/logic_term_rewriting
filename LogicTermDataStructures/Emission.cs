@@ -1,6 +1,9 @@
+using System.ComponentModel;
+using System;
 using Variable = LogicTermDataStructures.Variable;
 using Context = LogicTermDataStructures.Context;
 using LogicTermSentence = LogicTermDataStructures.Sentence;
+using System.Collections;
 
 using ContNum = System.Int32;
 using BoolNum = System.Int32;
@@ -16,10 +19,36 @@ namespace EmissionDataStructures {
             this.context = context;
             this.elements = elements; 
         }
+
+        public override string ToString(){
+            string str = this.name + "(";
+            foreach (var element in this.elements) {
+                str += element.ToString();
+                str += ",";
+            }
+            return str + ")";
+        }
         
     }
 
     public abstract class Semidet {
+
+        public override string ToString(){
+            var str = this.GetType().Name;
+            str += "(";
+            foreach(PropertyDescriptor descriptor in TypeDescriptor.GetProperties(this)){
+                string name = descriptor.Name;
+                object value = descriptor.GetValue(this);
+                Type value_type = value.GetType();
+                str += value.ToString();
+                
+                str += ",";
+            }
+            str += ")";
+            return str;
+            
+
+        }
 
     }
 
@@ -68,6 +97,33 @@ namespace EmissionDataStructures {
     
     
     public abstract class EmissionVerb {
+
+        public override string ToString(){
+            var str = this.GetType().Name;
+            str += "(";
+            foreach(PropertyDescriptor descriptor in TypeDescriptor.GetProperties(this)){
+                string name = descriptor.Name;
+                object value = descriptor.GetValue(this);
+                Type value_type = value.GetType();
+                
+                if (value_type.IsArray) {
+                    IEnumerable enumerable = value as IEnumerable;
+                    foreach (var subob in enumerable) {
+                        str += subob.ToString();
+                        
+                    }
+                } else
+                {
+                    str += value.ToString();
+                }
+                str += ",";
+            }
+            str += ")";
+            return str;
+            
+
+        }
+        
     }
 
     public class Fail : EmissionVerb {}
@@ -164,5 +220,30 @@ namespace EmissionDataStructures {
             this.context = context;
 
         }
+
+        public override string ToString()
+        {
+            
+            var str = this.head.ToString() + "{\n";
+            str += "variables: [";
+            foreach (var v in this.variables)
+            {
+                str += v.ToString();
+            }
+            str += "];\n";
+
+            str += "continuations: [";
+            foreach (var v in this.continuations)
+            {
+                str += v.ToString();
+            }
+            str += "];\n";
+
+            str += "number of conditions: " + this.conditions + ";\n";
+
+            return str + (this.body is null ? "" :  this.body + ";\n") +"}";
+    }
+
+        
     }
 }

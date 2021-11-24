@@ -1,5 +1,35 @@
+using System.ComponentModel;
+using System;
+using System.Collections;
 namespace LogicTermDataStructures {
-    public abstract class LogicVerb {}
+    public abstract class LogicVerb {
+        public override string ToString(){
+            var str = this.GetType().Name;
+            str += "(";
+            foreach(PropertyDescriptor descriptor in TypeDescriptor.GetProperties(this)){
+                string name = descriptor.Name;
+                object value = descriptor.GetValue(this);
+                Type value_type = value.GetType();
+                
+                if (value_type.IsArray) {
+                    IEnumerable enumerable = value as IEnumerable;
+                    foreach (var subob in enumerable) {
+                        str += subob.ToString();
+                        
+                    }
+                } else
+                {
+                    str += value.ToString();
+                }
+                str += ",";
+            }
+            str += ")";
+            return str;
+            
+            
+        }
+
+    }
 
     public class PredicateCall : LogicVerb {
         public Sentence sentence {get; set;}
@@ -19,11 +49,23 @@ namespace LogicTermDataStructures {
 
         public And(LogicVerb[] contents){
             this.contents = contents;
+            //    Console.WriteLine(contents.Length);
+            //      Console.WriteLine(System.Environment.StackTrace);
         }
 
         public void Deconstruct(out LogicVerb[] contents){
             contents = this.contents;
         }
+
+       // public override string ToString(){
+       //     var str = this.GetType().Name;
+       //     str += "(";
+       //     foreach (var item in this.contents) {
+       //         str += item.ToString();
+       //     }
+       //     str += ")";
+       //     return str;
+       // }
 
     }
     public class Or : LogicVerb {
@@ -83,6 +125,10 @@ namespace LogicTermDataStructures {
             this.head = head;
             this.body = body;
             this.context = context;
+        }
+
+        public override string ToString(){
+            return this.head.ToString() + (this.body is null ? "" : ":-" + this.body);
         }
 
         public void Deconstruct(out Sentence head,  out LogicVerb body, out Context context) {

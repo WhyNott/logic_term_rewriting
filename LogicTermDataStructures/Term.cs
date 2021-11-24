@@ -1,4 +1,5 @@
-﻿namespace LogicTermDataStructures {
+﻿using System;
+namespace LogicTermDataStructures {
     public record Context(int line_number, int column_number, string file_name);
 
     public abstract class Term {
@@ -63,11 +64,24 @@
             name    = this.name;
             context = this.context;
         }
+
+        public override string ToString(){
+            return String.Format("?{2}{0}({1})", this.name, this.id, this.is_head ? "." : "");
+        }
     }
     
     public class Sentence : Term {
         public Term[] elements {get; set;}
 
+
+        public override string ToString(){
+            string str = this.name + "(";
+            foreach (var element in this.elements) {
+                str += element.ToString();
+                str += ",";
+            }
+            return str + ")";
+        }
         public Sentence(string name, Term[] elements, Context context){
             this.name = name;
             this.context = context;

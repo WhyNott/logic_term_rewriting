@@ -40,6 +40,8 @@ namespace LogicTermRewriting
             l_term = this.l_term;
             r_term = this.r_term;
         }
+
+        
     }
 
 
@@ -75,6 +77,15 @@ namespace LogicTermRewriting
             context = this.context;
             variables = this.variables;
         }
+
+        public override string ToString(){
+            var str = this.head.ToString() + "<";
+            foreach (var v in this.variables) {
+                str += v.ToString();
+            }
+
+            return str + ">" + (this.body is null ? "" : ":-" + this.body);
+        }
     }
 
 
@@ -85,12 +96,13 @@ namespace LogicTermRewriting
         int conditions = 0;
 
         public Procedure rewrite(ClauseVariableExtracted input) {
+            var new_body = this.rewrite(input.body, true); 
             return new Procedure(
                 input.head,
                 input.variables,
                 this.continuations.ToArray(),
                 this.conditions,
-                this.rewrite(input.body, true),
+                new_body,
                 input.context
             );
 
@@ -171,11 +183,9 @@ namespace LogicTermRewriting
         
         public ClauseVariableExtracted extract_variables(Clause clause){
 
-            for (int i = 0; i < clause.head.elements.Length; i++)
-            {
+            for (int i = 0; i < clause.head.elements.Length; i++) {
                 var element = clause.head.elements[i];
-                switch (element)
-                {
+                switch (element) {
                     case LogicTermSentence _:
                         var new_variable = new Variable(
                             i.ToString(),
@@ -216,6 +226,7 @@ namespace LogicTermRewriting
         }
 
         private void add_clause_variable(Variable v){
+            
             if (!v.is_head) {
                 this.clause_variables.Add(v);
             }
@@ -294,13 +305,15 @@ namespace LogicTermRewriting
                         
                         foreach (LogicVerb lv in a.contents){
                             var new_lv = ve.extract_variables(lv);
+                            
                             if (new_lv is And) {
                                 lvs.AddRange(((And)new_lv).contents);
                             } else {
                                 lvs.Add(new_lv);
                             }
                         }
-                        this.new_body_verbs.Add(new And(ve.new_body_verbs.ToArray()));
+                        this.new_body_verbs.Add(new And(lvs.ToArray()));
+                        
                         this.clause_variables.UnionWith(ve.clause_variables);
                     }
                     break;
