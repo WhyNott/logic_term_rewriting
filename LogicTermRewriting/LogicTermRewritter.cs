@@ -113,6 +113,8 @@ namespace LogicTermRewriting
             int next_cont = last ? 0 : this.continuations.Count;
             EmissionVerb output;
             switch (input) {
+                //TODO: add fail and not
+                //Fix the bug (last can be a continuation int, stack will do rest)
                 case null:
                     output = new Succeed(next_cont);
                     break;
@@ -156,7 +158,7 @@ namespace LogicTermRewriting
                 case And a:
                     var first_element = a.contents[0];
                     for (int i = a.contents.Length - 1; i > 0; i--) {
-                        var result = this.rewrite(a.contents[i], i == (a.contents.Length - 1));
+                        var result = this.rewrite(a.contents[i], i == (a.contents.Length - 1) ? last : false);
                         this.continuations.Add(result);
                     }
                     output = this.rewrite(first_element, a.contents.Length == 1);
