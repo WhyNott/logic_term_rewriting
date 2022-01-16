@@ -8,7 +8,7 @@ using EmissionSentence = EmissionDataStructures.Sentence;
 
 using SemiUnify = EmissionDataStructures.Unify;
 using SemiStructure = EmissionDataStructures.Structure;
-
+using ContNum = System.Int32;
 
 namespace LogicTermRewriting
 {
@@ -96,7 +96,7 @@ namespace LogicTermRewriting
         int conditions = 0;
 
         public Procedure rewrite(ClauseVariableExtracted input) {
-            var new_body = this.rewrite(input.body, true); 
+            var new_body = this.rewrite(input.body, 0); 
             return new Procedure(
                 input.head,
                 input.variables,
@@ -109,12 +109,9 @@ namespace LogicTermRewriting
         }
 
         
-        public EmissionVerb rewrite(LogicVerb input, bool last) {
-            int next_cont = last ? 0 : this.continuations.Count;
+        public EmissionVerb rewrite(LogicVerb input, ContNum next_cont) {
             EmissionVerb output;
             switch (input) {
-                //TODO: add fail and not
-                //Fix the bug (last can be a continuation int, stack will do rest)
                 case null:
                     output = new Succeed(next_cont);
                     break;
@@ -133,7 +130,7 @@ namespace LogicTermRewriting
                 case Or or:
                     List<EmissionVerb> new_or = new List<EmissionVerb>();
                     foreach (LogicVerb lv in or.contents) {
-                        new_or.Add(this.rewrite(lv, last));
+                        new_or.Add(this.rewrite(lv, next_cont));
                     }
                     output = new Disjunction(new_or.ToArray());
                     break;
@@ -142,26 +139,26 @@ namespace LogicTermRewriting
                     var (cond, then, lse) = ifel;
                     this.continuations.Add(new Disjunction(new EmissionVerb[] {
                                 new SetCondition(this.conditions),
-                                this.rewrite(then, last)
+                                this.rewrite(then, next_cont)
                             }));
 
-                    var cond_and_then = this.rewrite(cond, false);
+                    var cond_and_then = this.rewrite(cond, this.continuations.Count);
+                    this.continuations.Add(this.rewrite(lse, next_cont));
                     output = new Disjunction(new EmissionVerb[] {
                             cond_and_then,
                             new Conditional(this.continuations.Count,
                                             new CheckCondition(this.conditions))
                         });
-                    this.continuations.Add(this.rewrite(lse, last));
                     this.conditions++;
                     break;
 
                 case And a:
                     var first_element = a.contents[0];
                     for (int i = a.contents.Length - 1; i > 0; i--) {
-                        var result = this.rewrite(a.contents[i], i == (a.contents.Length - 1) ? last : false);
+                        var result = this.rewrite(a.contents[i], i == (a.contents.Length - 1) ? next_cont : this.continuations.Count);
                         this.continuations.Add(result);
                     }
-                    output = this.rewrite(first_element, a.contents.Length == 1);
+                    output = this.rewrite(first_element, a.contents.Length == 1 ? next_cont : this.continuations.Count);
                     break;
 
                 default:
