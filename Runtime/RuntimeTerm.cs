@@ -8,23 +8,51 @@ namespace Runtime {
         public RuntimeTerm[] arguments = [];
         public int? copy_num = null;
 
-        public boolean is_variable(){
+        public static RuntimeTerm make_empty_variable(
+            String name, int? copy_num){
+            var term = new RuntimeTerm();
+            term.id = Trail.global_id_counter++;
+            term.variable_value = term;
+            term.name = name;
+            term.copy_num = copy_num;
+            return term;
+        }
+
+        public static RuntimeTerm make_atom(String name, bool model){
+            var term = new RuntimeTerm();
+            term.id = Trail.global_id_counter++;
+            term.name = name;
+            term.model = model;
+            return term;
+        }
+
+        public static RuntimeTerm make_structured_term(
+            String functor, RuntimeTerm[] arguments, bool model){
+            var term = new RuntimeTerm();
+            term.id = Trail.global_id_counter++;
+            term.name = name;
+            term.model = model;
+            return term;
+        }
+        
+
+        public bool is_variable(){
             return this.variable_value != null;
         }
 
-        public boolean is_model(){
+        public bool is_model(){
             return this.variable;
         }
 
-        public boolean is_bound(){
+        public bool is_bound(){
             return this.variable_value != this;
         }
 
-        public boolean is_atom(){
+        public bool is_atom(){
             return (this.arguments == null || this.arguments.Length == 0);
         }
 
-        public boolean is_copy(){
+        public bool is_copy(){
             return this.copy_num != null;
         }
 
@@ -41,6 +69,14 @@ namespace Runtime {
                 return this.dereferenced();
             } else {
                 return this;
+            }
+        }
+
+        public RuntimeTerm backup_value(){
+            if (this.is_variable() && this.value.is_copy()){
+                return this.id == this.variable_value.copy_num ? this : this.variable_value;
+            } else {
+                return this.variable_value;
             }
         }
 
@@ -98,7 +134,7 @@ namespace Runtime {
                 for (var val in this.variable_value.arguments){
                     new_args.push(val.copy());
                 }
-                var term = make_structured_term(
+                var term = RuntimeTerm.make_structured_term(
                     this.variable_value.name, new_args.ToArray());
                 term.copy_num = term.id;
                 return term;
@@ -106,7 +142,7 @@ namespace Runtime {
             
         }
 
-        public boolean unify_with(RuntimeTerm other){
+        public bool unify_with(RuntimeTerm other){
             const x = this.dereferenced_value();
             const y = other.dereferenced_value();
 

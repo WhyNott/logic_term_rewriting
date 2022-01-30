@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System;
 using Variable = LogicTermDataStructures.Variable;
 using Context = LogicTermDataStructures.Context;
+using Identifier = LogicTermDataStructures.Identifier;
 using LogicTermSentence = LogicTermDataStructures.Sentence;
 using System.Collections;
 
@@ -10,7 +11,16 @@ using BoolNum = System.Int32;
 
 namespace EmissionDataStructures {
     public class Sentence{
-        public string name {get; set;}
+        //name string is actually stored in a static dictionary and structure
+        //only keeps Identifier struct that points to it
+        public Identifier id;
+        public string name {
+            get => id.id_to_string();
+            set {
+                id = Identifier.string_to_id(value);
+            };
+        }
+        
         public Context context {get; set;}
         public Variable[] elements {get; set;}
 

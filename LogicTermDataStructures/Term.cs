@@ -2,12 +2,50 @@
 namespace LogicTermDataStructures {
     public record Context(int line_number, int column_number, string file_name);
 
+    public struct Identifier {
+        public int id_num;
+        public int compilation_number;
+
+        private static Dictionary<string, Identifier> string_id_map = new Dictionary<string, Identifier>();
+        private static List<int> comp_offset = new List<int>();
+        private static List<string> ids = new List<string>();
+        public static int highest_id = 0;
+        public static int current_compilation_unit = 0;
+
+        public string id_to_string() {
+            var offset = Identifier.comp_offset[this.compilation_number];
+            return Identifier.ids[this.id_num + offset];
+        }
+
+        public static Identifier string_to_id(string str) {
+            try {
+                var id = new Identifier(
+                    Identifier.highest_id,
+                    Identifier.current_compilation_unit
+                );
+                Identifier.string_id_map.Add(str, id);
+                Identifier.highest_id++;
+                return id;
+            
+            } catch (ArgumentException) {
+                return Identifier.string_id_map[str];
+            }
+        }
+
+        public Identifier(int id, int comp){
+            this.id_num = id;              
+            this.compilation_number = comp;  
+        }
+        
+    }
+    
     public abstract class Term {
-        public string name {get; set;}
+
         public Context context {get; set;}
     }
 
     public class Variable : Term {
+        public string name {get; set;}
         public bool is_head {get; set;}
         public int id {get; set;}
 
@@ -71,6 +109,16 @@ namespace LogicTermDataStructures {
     }
     
     public class Sentence : Term {
+
+        //name string is actually stored in a static dictionary and structure
+        //only keeps Identifier struct that points to it
+        public Identifier id;
+        public string name {
+            get => id.id_to_string();
+            set {
+                id = Identifier.string_to_id(value);
+            };
+        }
         public Term[] elements {get; set;}
 
 
