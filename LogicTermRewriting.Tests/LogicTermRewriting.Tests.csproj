@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\LogicTermDataStructures\LogicTermDataStructures.csproj" />
     <ProjectReference Include="..\LogicTermRewriting\LogicTermRewriting.csproj" />
+    <ProjectReference Include="..\CodeGen\CodeGen.csproj" />
   </ItemGroup>
 
 </Project>

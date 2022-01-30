@@ -1,12 +1,21 @@
 ﻿using System;
 using System.CodeDom;
+using System.CodeDom.Compiler;
+using System.Text;
 using Term = Runtime.RuntimeTerm;
 using Identifier = LogicTermDataStructures.Identifier;
-namespace CodeGen
-{
+using Variable = LogicTermDataStructures.Variable;
+using LogicTermSentence = LogicTermDataStructures.Sentence;
+using EmissionDataStructures;
+using System.Reflection;
+using Microsoft.CSharp;
+using System.IO;
+
+
+namespace CodeGen {
 
     public static class ExampleCompUnit {
-        public static procedure_1(Term X, Term Y, Action cont_0) {
+        public static void procedure_1(Term X, Term Y, Action cont_0) {
             Action cont_1 = delegate() {
                 ExampleCompUnit.procedure_2(X, cont_0);
             };
@@ -14,9 +23,12 @@ namespace CodeGen
             ExampleCompUnit.procedure_3(Y, X, cont_1);
         }
 
-        public static procedure_2(Term X);
-
+        public static void procedure_2(Term X, Action cont_0) { }
+        public static void procedure_3(Term X, Term Y, Action cont_0) { }
+        
+        
     }
+
     
     public class CodeGenerator {
 
@@ -33,29 +45,36 @@ namespace CodeGen
             langauage.Imports.Add(new CodeNamespaceImport("Runtime"));
             this.targetClass = new CodeTypeDeclaration(
                 String.Format("Comp_{0}",
-                              Identifier.current_compilation_unit);
+                              Identifier.current_compilation_unit)
             );
             this.targetClass.IsClass = true;
             this.targetClass.TypeAttributes = TypeAttributes.Public;
             langauage.Types.Add(targetClass);
             this.targetUnit.Namespaces.Add(langauage);
         }
+        
 
 
         public void add_procedure(int proc_num){
             var proc = this.procedures[proc_num];
             CodeMemberMethod procedure_method = new CodeMemberMethod();
-            procedure_method.Attributes = MemberAttributes.Public;
+            procedure_method.Attributes =
+                MemberAttributes.Public | MemberAttributes.Static;
             procedure_method.Name = String.Format("Procedure_{0}",
                               proc.head.id.id_num);
-            procedure_method.Comments.Add(proc.head.name);
-            for (var variable in proc.head.elements){
+            procedure_method.Comments.Add(
+                new CodeCommentStatement(new CodeComment(proc.head.name, false))
+            );
+            
+            foreach (var variable in proc.head.elements){
                 procedure_method.Parameters.Add(
                      new CodeParameterDeclarationExpression(
-                         typeof(RuntimeTerm), element.name
+                         new CodeTypeReference("RuntimeTerm"), variable.name
                      )
                 );
             }
+            
+            
             procedure_method.Parameters.Add(
                 new CodeParameterDeclarationExpression(
                     typeof(Action), "cont_0"
@@ -65,7 +84,7 @@ namespace CodeGen
 
             StringBuilder snippet = new StringBuilder("//beginning of the procedure code\n", 500);
 
-            for (var variable in proc.variables){
+            foreach (var variable in proc.variables){
                 snippet.AppendFormat(
                     "var {0} = RuntimeTerm.make_empty_variable(\"{0}\", null);\n",
                     variable.name
@@ -77,14 +96,14 @@ namespace CodeGen
                     "bool cond_{0} = false; \n", i
                 );
             }
-            int i = 1;
-            for (var continuation in proc.continuations) {
+            int j = 1;
+            foreach (var continuation in proc.continuations) {
                 snippet.AppendFormat(
-                    "Action cont_{0} = delegate() { \n", i
+                    "Action cont_{0} = delegate() {{ \n", j
                 );
                 this.write_verb(continuation, snippet, proc_num);
                 snippet.Append("}; \n");
-                i++;
+                j++;
             }
 
             this.write_verb(proc.body, snippet, proc_num);
@@ -97,9 +116,26 @@ namespace CodeGen
 
         }
 
-        public void write_sentence(Sentence s, StringBuilder sb){
-            //stub
-            throw new NotImplementedException();
+        public void write_sentence(LogicTermSentence s, StringBuilder sb){
+
+            if (s.elements.Length == 0) {
+                sb.AppendFormat("RuntimeTerm.make_atom(\"{0}\", false)", s.name);
+            } else {
+                sb.AppendFormat("RuntimeTerm.make_structured_term(\"{0}\"", s.name);
+                foreach (var element in s.elements) {
+                    sb.Append(", ");
+                    switch (element) {
+                        case Variable v:
+                            sb.AppendFormat("{0}", v.name);
+                            break;
+                        case LogicTermSentence ls:
+                            this.write_sentence(ls, sb);
+                            break;
+
+                    }
+                }
+                sb.Append("false)");
+            }
         }
         
         public void write_verb(EmissionVerb verb, StringBuilder sb, int proc_num){
@@ -115,24 +151,24 @@ namespace CodeGen
                     break;
                     
                 case Disjunction d:
-                    for (var v in proc.variables){
+                    foreach (var v in proc.variables){
                         if (v.is_head) continue;
                         sb.AppendFormat(
                             "var backup_{0} = {0}.backup_value(); \n", v.name
                         );
                     }
-                    sb.Append("Trail.new_choice_point();");
-                    for (var arg in d.arguments) {
+                    sb.Append("Trail.new_choice_point();\n");
+                    foreach (var arg in d.arguments) {
                         this.write_verb(arg, sb, proc_num);
-                        for (var v in proc.variables){
+                        foreach (var v in proc.variables){
                             if (v.is_head) continue;
                             sb.AppendFormat(
                                 "{0}.variable_value = backup_{0}; \n", v.name
                             );
                         }
-                        sb.Append("Trail.restore_choice_point();");
+                        sb.Append("Trail.restore_choice_point();\n");
                     }
-                    sb.Append("Trail.remove_choice_point();");
+                    sb.Append("Trail.remove_choice_point();\n");
                     break;
                     
                 case SetCondition sc:
@@ -148,7 +184,7 @@ namespace CodeGen
                         c.sentence.id.id_num
                     );
                     
-                    for (var v in c.sentence.elements) {
+                    foreach (var v in c.sentence.elements) {
                         sb.AppendFormat("{0},", v.name);
                     }
                     sb.AppendFormat("cont_{0}); \n", c.next);
@@ -158,8 +194,8 @@ namespace CodeGen
                     switch (c.semidet){
                         case Unify u:
                             sb.AppendFormat(
-                                "if ({0}.unify_with({1}) cont_{2}(); \n",
-                                u.l_term, u.r_term, c.next 
+                                "if ({0}.unify_with({1})) cont_{2}(); \n",
+                                u.l_term.name, u.r_term.name, c.next 
                             );
                             break;
                         case Structure s:
@@ -167,8 +203,8 @@ namespace CodeGen
                             this.write_sentence(s.r_term, sb);
                             sb.Append(";\n");
                             sb.AppendFormat(
-                                "if ({0}.unify_with(model) cont_{1}(); \n",
-                                s.l_term,  c.next 
+                                "if ({0}.unify_with(model)) cont_{1}(); \n",
+                                s.l_term.name,  c.next 
                             );
                             sb.Append("\n}\n");
                             break;
@@ -206,3 +242,8 @@ namespace CodeGen
         
     }
 }
+
+
+
+
+

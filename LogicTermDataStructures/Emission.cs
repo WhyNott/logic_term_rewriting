@@ -18,7 +18,7 @@ namespace EmissionDataStructures {
             get => id.id_to_string();
             set {
                 id = Identifier.string_to_id(value);
-            };
+            }
         }
         
         public Context context {get; set;}
@@ -257,3 +257,4 @@ namespace EmissionDataStructures {
         
     }
 }
+

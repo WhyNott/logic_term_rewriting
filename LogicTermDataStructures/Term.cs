@@ -1,16 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace LogicTermDataStructures {
     public record Context(int line_number, int column_number, string file_name);
 
-    public struct Identifier {
+    public struct Identifier
+    {
         public int id_num;
         public int compilation_number;
 
         private static Dictionary<string, Identifier> string_id_map = new Dictionary<string, Identifier>();
-        private static List<int> comp_offset = new List<int>();
+        private static List<int> comp_offset = new List<int>(new int[] {0});
         private static List<string> ids = new List<string>();
         public static int highest_id = 0;
         public static int current_compilation_unit = 0;
+
+        
 
         public string id_to_string() {
             var offset = Identifier.comp_offset[this.compilation_number];
@@ -24,6 +29,7 @@ namespace LogicTermDataStructures {
                     Identifier.current_compilation_unit
                 );
                 Identifier.string_id_map.Add(str, id);
+                Identifier.ids.Add(str);
                 Identifier.highest_id++;
                 return id;
             
@@ -117,7 +123,7 @@ namespace LogicTermDataStructures {
             get => id.id_to_string();
             set {
                 id = Identifier.string_to_id(value);
-            };
+            }
         }
         public Term[] elements {get; set;}
 
