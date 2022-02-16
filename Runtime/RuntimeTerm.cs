@@ -60,20 +60,16 @@ namespace Runtime {
             return this.copy_num != null;
         }
 
+        //note: this function could get stuck in an infinite loop if there is
+        //a circular binding
+        //however, since we perform unification without occurs check,
+        //this is already something that would break stuff, so its probably ok
         public RuntimeTerm dereferenced(){
-            if (this.is_variable() && this.is_bound()) {
-                return this.variable_value.dereferenced_value();
-            } else {
-                return this;
+            RuntimeTerm term = this;
+            while (term.is_variable() && term.is_bound()) {
+                term = term.variable_value;
             }
-        }
-
-        public RuntimeTerm dereferenced_value(){
-            if (this.is_variable()){
-                return this.dereferenced();
-            } else {
-                return this;
-            }
+            return term;
         }
 
         public RuntimeTerm backup_value(){
@@ -99,7 +95,7 @@ namespace Runtime {
             if (this.id < Trail.last_id_counter.Peek()){
                 Trail.add_postbinding(this);
             }
-            
+            sq = sq.dereferenced();
             
             //L1 binding
             if (sq.is_atom()){
@@ -148,8 +144,8 @@ namespace Runtime {
         }
 
         public bool unify_with(RuntimeTerm other){
-            var x = this.dereferenced_value();
-            var y = other.dereferenced_value();
+            var x = this.dereferenced();
+            var y = other.dereferenced();
 
             if (x.is_atom() && y.is_atom()){
                 return x.name == y.name;
