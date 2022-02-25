@@ -14,21 +14,6 @@ using System.IO;
 
 namespace CodeGen {
 
-    public static class ExampleCompUnit {
-        public static void procedure_1(Term X, Term Y, Action cont_0) {
-            Action cont_1 = delegate() {
-                ExampleCompUnit.procedure_2(X, cont_0);
-            };
-            
-            ExampleCompUnit.procedure_3(Y, X, cont_1);
-        }
-
-        public static void procedure_2(Term X, Action cont_0) { }
-        public static void procedure_3(Term X, Term Y, Action cont_0) { }
-        
-        
-    }
-
     
     public class CodeGenerator {
 

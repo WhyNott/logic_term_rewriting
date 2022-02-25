@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Parser {
 
@@ -11,10 +13,86 @@ namespace Parser {
         }
     }
 
-    //todo: all of these should probably handle comments as well
+
+    public class Token {
+        public int line_count;
+        public int column_count;
+        public String filename;
+
+        public Token(String filename, int line_count, int column_count) {
+            this.filename = filename;
+            this.line_count = line_count;
+            this.column_count = column_count;
+        }
+
+        public override string ToString() {
+            var name = base.ToString().Split('.')[1];
+            return "[" + name + "]";
+            
+        }
+    }
+
+    public class StringToken : Token {
+        public String content;
+        
+        public StringToken(String filename, int line_count, int column_count, String content)
+            :base(filename, line_count, column_count){
+            
+            this.content = content;
+            
+        }
+
+        public override string ToString() {
+            return  base.ToString() + ":(" + this.content + ")";
+        }
+    }
+
+    public class Indent : Token{
+        public Indent(String filename, int line_count, int column_count)
+           :base(filename, line_count, column_count) {}
+    }
     
+
+    public class Dedent : Token{
+        public Dedent(String filename, int line_count, int column_count)
+            :base(filename, line_count, column_count) {}
+    }
+    
+    public class Dash : Token{
+        public Dash(String filename, int line_count, int column_count)
+            :base(filename, line_count, column_count) {}
+    }
+    public class Semicolon : Token{
+        public Semicolon(String filename, int line_count, int column_count)
+            :base(filename, line_count, column_count) {}
+    }
+    public class BeginSentence : Token{
+        public BeginSentence(String filename, int line_count, int column_count)
+           :base(filename, line_count, column_count) {}
+    }
+    public class EndSentence : Token{
+        public EndSentence(String filename, int line_count, int column_count)
+            :base(filename, line_count, column_count) {}
+    }
+
+
+    public class SentencePiece : StringToken{
+        public SentencePiece(String filename, int line_count, int column_count, String content)
+            :base(filename, line_count, column_count, content) {} 
+    }
+    public class SentencePieceVerbatim : StringToken{
+        public SentencePieceVerbatim(String filename, int line_count, int column_count, String content)
+            :base(filename, line_count, column_count, content) {} 
+    }
+    public class Variable : StringToken{
+        public Variable(String filename, int line_count, int column_count, String content)
+            :base(filename, line_count, column_count, content) {} 
+    }
+    
+    
+
     public class Tokenizer {
-        public Stack<Token> tokens = new Stack();
+        public Stack<Token> tokens = new Stack<Token>();
         Stack<int> indentation_stack = new Stack<int>();
         private int line_count = 1;
         private int column_count = 0;
@@ -26,13 +104,14 @@ namespace Parser {
 
         public Tokenizer(String filename, String file){
             this.filename = filename;
-            this.file = file;
+            this.file = file.Replace(Environment.NewLine, "\n"); //Remove carriage returns from newlines for easier handling
             this.indentation_stack.Push(0);
+            this.sentence_piece = new StringBuilder();
         }
 
         private void incr(){
             index++;
-            if (file[index] == '\n'){
+            if (this.index  < this.file.Length && file[index] == '\n'){
                 this.line_count++;
                 this.column_count = 0;
             } else {
@@ -51,8 +130,8 @@ namespace Parser {
         }
 
         private void handle_comment(){
-            for (; this.index  < this.file.Length; this.incr()){
-                if (this.file[this.index] == '\n')
+            for (; this.index+1  < this.file.Length; this.incr()){
+                if (this.file[this.index+1] == '\n')
                     break;
             }
         }
@@ -86,7 +165,9 @@ namespace Parser {
         }
         
         private bool tokenize_variable(bool verbatim=false){
+            
             if (Char.IsLetterOrDigit(this.file[this.index+1])) {
+                this.incr();
                 //previous sentence piece is over
                 if (verbatim)
                     this.emmit_verbatim_sentence_piece();
@@ -95,7 +176,7 @@ namespace Parser {
                 
                 for (; this.index  < this.file.Length; this.incr()){
                     if (Char.IsLetterOrDigit(this.file[this.index])){
-                        this.sentence_piece.Insert(this.file[this.index]);
+                        this.sentence_piece.Append(this.file[this.index]);
                     } else {
                         break;
                     }
@@ -111,6 +192,7 @@ namespace Parser {
                     )
                 );
                 this.sentence_piece.Clear();
+               
                 return true;
 
             
@@ -121,10 +203,20 @@ namespace Parser {
         }
 
         public void handle_indentation(){
+           
+            if (this.index+1 >= this.file.Length || this.file[this.index+1] == '#') {
+                return;
+            }
             //this starts at newline, so lets go to the next character
             this.incr();
+            
+            
             int indentation_counter = 0;
+                        
             char indentation_kind = this.file[this.index];
+            
+
+
             for (; this.index < this.file.Length && Char.IsWhiteSpace(this.file[this.index]); this.incr()){
                 //lines that end without any content don't interest us
                 if (this.file[this.index] == '\n')
@@ -139,28 +231,39 @@ namespace Parser {
                 else
                     throw new SyntaxErrorException(String.Format("Inconsistent whitespace in indentation for file {0} at line {1}:{2} \nHint: have you accidentally mixed tabs and spaces?", this.filename, this.line_count, this.column_count));
             }
-            if (indent_counter > indentation_stack.Peek()) {
-                output_tokens.Push(new Indent(
+           
+            if (this.index >= this.file.Length || this.file[this.index] == '#') {
+                this.decr();
+                return;
+            }
+            
+            if (indentation_counter > this.indentation_stack.Peek()) {
+                this.tokens.Push(new Indent(
                                        this.filename,
                                        this.line_count,
                                        this.column_count
                                    ));
-                indentation_stack.Push(indent_counter);
-            } else if (indent_counter < indentation_stack.Peek()) {
+                this.indentation_stack.Push(indentation_counter);
+            } else if (indentation_counter < indentation_stack.Peek()) {
                 while (indentation_stack.Count > 0) {
-                    output_tokens.Add(new Dedent(
-                                          this.filename,
+                    
+                    int indentation = this.indentation_stack.Peek();
+                    if (indentation == indentation_counter) {
+                        break;
+                    } else {
+                        this.indentation_stack.Pop();
+                    }
+                    this.tokens.Push(new Dedent(
+                                         this.filename,
                                           this.line_count,
                                           this.column_count
-                                      ));
-                    int indentation = indentation_stack.Pop();
-                    if (indentation == indent_counter) {
-                        break;
-                    }
+                                     ));
+                                      
                 }
                 
+                
                 if (indentation_stack.Count == 0) {
-                    if (indent_counter == 0){
+                    if (indentation_counter == 0){
                         indentation_stack.Push(0);
                     } else {
                         throw new SyntaxErrorException(String.Format("Inconsistent indentation in file {0} at line {1}:{2}", this.filename, this.line_count, this.column_count));
@@ -169,6 +272,7 @@ namespace Parser {
                 
             }
             
+            this.decr();
         }
 
         public Stack<Token> tokenize_file(){
@@ -195,6 +299,8 @@ namespace Parser {
                     //@todo: shouldn't this be doing a simillar scan to the
                     //parenthesis one?
                     this.tokenize_prose_sentence();
+                } else if (this.file[this.index] == '#'){
+                    this.handle_comment();
                 } else if (this.file[this.index] == '\n'){
                     this.handle_indentation();
                 } else if (Char.IsWhiteSpace(this.file[this.index])){
@@ -203,25 +309,25 @@ namespace Parser {
                 
                     int paren_counter = 1;
                 
-                    bool inner_parens = false;
-                    bool bounded = false;
+                    
+                    bool unbound = false;
                     //scan until the end of line
-                    for (int i = this.index+1; index < this.file.Length && this.file[i] != "\n"; i++){
+                    for (int i = this.index+1; index < this.file.Length && this.file[i] != '\n'; i++){
                         if (paren_counter == 0) {
-                            bounded = true;
+                            unbound = true;
                             break;
                         }
-                        if (this.file[i] == "(") {
+                        if (this.file[i] == '(') {
                             paren_counter++;
-                            inner_parens = true;
+                    
                         }
 
-                        if (this.file[i] == ")") {
+                        if (this.file[i] == ')') {
                             paren_counter--;
                         }
                     }
 
-                    bounded = bounded || !inner_parens;
+                    var bounded = !unbound;
 
                     if (bounded)
                         this.tokenize_code_sentence();
@@ -231,7 +337,17 @@ namespace Parser {
                     this.tokenize_inline_sentence();
                 } 
             }
+            while (indentation_stack.Count > 0 && indentation_stack.Peek() != 0) {
+                this.tokens.Push(new Dedent(
+                                     this.filename,
+                                     this.line_count,
+                                     this.column_count
+                                 ));
+                this.indentation_stack.Pop();
+            }
+            
             return this.tokens;
+            
         
         
         }
@@ -252,7 +368,7 @@ namespace Parser {
                     break;
                 } else if (this.file[this.index] == '?'){
                     if (!this.tokenize_variable()){
-                        this.sentence_piece.Insert(this.file[this.index]);
+                        this.sentence_piece.Append(this.file[this.index]);
                     } 
                 } else if (this.file[this.index] == '('){
                     this.tokenize_code_sentence();
@@ -262,9 +378,10 @@ namespace Parser {
                     if (this.sentence_piece.Length != 0)
                         this.emmit_sentence_piece();
                 } else {
-                    this.sentence_piece.Insert(this.file[this.index]);
+                    this.sentence_piece.Append(this.file[this.index]);
                 }
             }
+            this.emmit_sentence_piece();
             this.decr();
             tokens.Push(
                 new EndSentence(
@@ -285,6 +402,7 @@ namespace Parser {
                     begin_cc
                 )
             );
+            this.incr();//skip the initial '('
             for (; this.index < this.file.Length; this.incr()){
                 if (this.file[this.index] == '#'){
                     this.emmit_sentence_piece();
@@ -307,12 +425,12 @@ namespace Parser {
                     this.tokenize_prose_sentence();
                 } else if (this.file[this.index] == '?'){
                     if (!this.tokenize_variable()){
-                        this.sentence_piece.Insert(this.file[this.index]);
+                        this.sentence_piece.Append(this.file[this.index]);
                     } 
                 } else if (Char.IsWhiteSpace(this.file[this.index])){
                         this.emmit_sentence_piece();
                 } else {
-                    this.sentence_piece.Insert(this.file[this.index]);
+                    this.sentence_piece.Append(this.file[this.index]);
                 }
             }
             
@@ -330,6 +448,7 @@ namespace Parser {
                     begin_cc
                 )
             );
+            this.incr();//skip the initial '<'
             for (; this.index < this.file.Length; this.incr()){
                 if (this.file[this.index] == '#'){
                     this.emmit_verbatim_sentence_piece();
@@ -337,12 +456,22 @@ namespace Parser {
                 } else if (this.file[this.index] == '<'){
                     this.emmit_verbatim_sentence_piece();
                     this.tokenize_prose_sentence();
+                } else if (this.file[this.index] == '>'){
+                    this.emmit_verbatim_sentence_piece();
+                    tokens.Push(
+                        new EndSentence(
+                            this.filename,
+                            begin_lc,
+                            begin_cc
+                        )
+                    );
+                    return;
                 } else if (this.file[this.index] == '?'){
-                    if (!this.tokenize_variable(verbatim=true)){
-                        this.sentence_piece.Insert(this.file[this.index]);
+                    if (!this.tokenize_variable(verbatim:true)){
+                        this.sentence_piece.Append(this.file[this.index]);
                     }
                 } else {
-                    this.sentence_piece.Insert(this.file[this.index]);
+                    this.sentence_piece.Append(this.file[this.index]);
                 }
             }
 
@@ -352,3 +481,6 @@ namespace Parser {
         
     }   
 }
+
+
+
