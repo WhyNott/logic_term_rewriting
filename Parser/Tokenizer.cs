@@ -19,11 +19,14 @@ namespace Parser {
         public int column_count;
         public String filename;
 
+        public Token(){}
+
         public Token(String filename, int line_count, int column_count) {
             this.filename = filename;
             this.line_count = line_count;
             this.column_count = column_count;
         }
+        
 
         public override string ToString() {
             var name = base.ToString().Split('.')[1];
@@ -48,29 +51,35 @@ namespace Parser {
     }
 
     public class Indent : Token{
+        public Indent(){}
         public Indent(String filename, int line_count, int column_count)
            :base(filename, line_count, column_count) {}
     }
     
 
     public class Dedent : Token{
+        public Dedent(){}
         public Dedent(String filename, int line_count, int column_count)
             :base(filename, line_count, column_count) {}
     }
     
     public class Dash : Token{
+        public Dash(){}
         public Dash(String filename, int line_count, int column_count)
             :base(filename, line_count, column_count) {}
     }
     public class Semicolon : Token{
+        public Semicolon(){}
         public Semicolon(String filename, int line_count, int column_count)
             :base(filename, line_count, column_count) {}
     }
     public class BeginSentence : Token{
+        public BeginSentence(){}
         public BeginSentence(String filename, int line_count, int column_count)
            :base(filename, line_count, column_count) {}
     }
     public class EndSentence : Token{
+        public EndSentence(){}
         public EndSentence(String filename, int line_count, int column_count)
             :base(filename, line_count, column_count) {}
     }
