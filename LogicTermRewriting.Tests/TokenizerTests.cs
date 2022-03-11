@@ -123,17 +123,20 @@ namespace LogicTermRewriting.Tests {
       - (room1) leads to (room2)
       - (room2) leads to (room3)
 
-      - ?RoomA is connected to ?RoomB:
-         or:
-           - ?RoomA leads to ?RoomB
-           - ?RoomB leads to ?RoomA
+      - 
+       ?RoomA is connected to ?RoomB:
+           or:
+             - ?RoomA leads to ?RoomB
+             - ?RoomB leads to ?RoomA
 
-      - ?RoomA can be walked to from ?RoomB:
-         or:
-          - ?RoomA is connected to ?RoomB
-          - and:
-               - ?RoomA can be walked to from ?RoomC
-               - ?RoomC can be walked to from ?RoomB
+      - 
+       ?RoomA can be walked to from ?RoomB:
+           or:
+            - ?RoomA is connected to ?RoomB
+            - 
+             and:
+                 - ?RoomA can be walked to from ?RoomC
+                 - ?RoomC can be walked to from ?RoomB
 ";
 
            Tokenizer t = new Tokenizer("test_string", test_string);
@@ -143,7 +146,7 @@ namespace LogicTermRewriting.Tests {
            Token [] tokens = output.ToArray();
 
            Array.Reverse(tokens);
-
+           
            int indent_counter = 0;
            
            foreach (var token in tokens) {
@@ -190,6 +193,7 @@ namespace LogicTermRewriting.Tests {
                "[EndSentence]",
                "[EndSentence]",
                "[Dash]",
+               "[Indent]",
                "[BeginSentence]",
                "[Variable]:(RoomA)",
                "[SentencePiece]:(is)",
@@ -218,7 +222,11 @@ namespace LogicTermRewriting.Tests {
                "[SentencePiece]:(to)",
                "[Variable]:(RoomA)",
                "[EndSentence]",
+               "[Dedent]",
+               "[Dedent]",
+               "[Dedent]",
                "[Dash]",
+               "[Indent]",
                "[BeginSentence]",
                "[Variable]:(RoomA)",
                "[SentencePiece]:(can)",
@@ -229,7 +237,7 @@ namespace LogicTermRewriting.Tests {
                "[Variable]:(RoomB)",
                "[EndSentence]",
                "[Semicolon]",
-               "[Dedent]",
+               "[Indent]",
                "[BeginSentence]",
                "[SentencePiece]:(or)",
                "[EndSentence]",
@@ -244,6 +252,7 @@ namespace LogicTermRewriting.Tests {
                "[Variable]:(RoomB)",
                "[EndSentence]",
                "[Dash]",
+               "[Indent]",
                "[BeginSentence]",
                "[SentencePiece]:(and)",
                "[EndSentence]",
@@ -273,12 +282,19 @@ namespace LogicTermRewriting.Tests {
                "[Dedent]",
                "[Dedent]",
                "[Dedent]",
+               "[Dedent]",
+               "[Dedent]",
                "[Dedent]"
 
            };
 
            for (int i = 0; i < tokens.Length; i++) {
-               Assert.True(expected_tokens[i] == tokens[i].ToString());
+                if (expected_tokens[i] != tokens[i].ToString())
+                {
+                    Token tok = tokens[i];
+                    Console.WriteLine(tok.ToString() + ":" + tok.line_count.ToString());
+                }
+                Assert.True(expected_tokens[i] == tokens[i].ToString());
            }
 
         }

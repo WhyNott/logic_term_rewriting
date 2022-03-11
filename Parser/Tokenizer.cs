@@ -212,40 +212,51 @@ namespace Parser {
         }
 
         public void handle_indentation(){
-           
+            //If there is no next line or the line begins with a comment,
+            //there is no indentation to handle
             if (this.index+1 >= this.file.Length || this.file[this.index+1] == '#') {
                 return;
             }
-            //this starts at newline, so lets go to the next character
+            
+            //Move on to the first character of the line
             this.incr();
             
             
             int indentation_counter = 0;
-                        
+
+            //The kind of whitespace used to indent a given line
+            //(we do not allow mixing eg. tabs and spaces due to ambiguous lengths) 
             char indentation_kind = this.file[this.index];
             
 
-
+            //Iterate until the end of file or the beginning of actual line content
             for (; this.index < this.file.Length && Char.IsWhiteSpace(this.file[this.index]); this.incr()){
                 //lines that end without any content don't interest us
-                if (this.file[this.index] == '\n')
+                if (this.file[this.index] == '\n'){
+                    this.decr();
                     return;
+                }
+
                 if (this.file[this.index] == indentation_kind)
                     if (indentation_kind == ' ')
                         indentation_counter++;
                     else if (indentation_kind == '\t')
+                        //we assume a tab is equal to 4 spaces
                         indentation_counter += 4;
-                    else //for now, anway
+                    else //all other whitespace counts as 1 space (for now)
                         indentation_counter++;
                 else
                     throw new SyntaxErrorException(String.Format("Inconsistent whitespace in indentation for file {0} at line {1}:{2} \nHint: have you accidentally mixed tabs and spaces?", this.filename, this.line_count, this.column_count));
             }
-           
+            //If file has ended or the line is just a comment, we don't need to handle indentation
             if (this.index >= this.file.Length || this.file[this.index] == '#') {
+                //we move the index one before to ensure tokenize_file method
+                //can handle both the EOF and comment cases
                 this.decr();
                 return;
             }
-            
+
+            //current line has deeper indentation then the previous line
             if (indentation_counter > this.indentation_stack.Peek()) {
                 this.tokens.Push(new Indent(
                                        this.filename,
@@ -253,7 +264,11 @@ namespace Parser {
                                        this.column_count
                                    ));
                 this.indentation_stack.Push(indentation_counter);
-            } else if (indentation_counter < indentation_stack.Peek()) {
+            }
+            //current line has smaller indentation then the previous line
+            else if (indentation_counter < indentation_stack.Peek()) {
+                //continue emmiting dedentation tokens until we encounter
+                //an old indentation that matches
                 while (indentation_stack.Count > 0) {
                     
                     int indentation = this.indentation_stack.Peek();
@@ -270,17 +285,23 @@ namespace Parser {
                                       
                 }
                 
-                
+                //once the stack is empty
                 if (indentation_stack.Count == 0) {
                     if (indentation_counter == 0){
                         indentation_stack.Push(0);
+                        this.tokens.Push(new Dedent(
+                                         this.filename,
+                                         this.line_count,
+                                         this.column_count
+                                         ));
                     } else {
                         throw new SyntaxErrorException(String.Format("Inconsistent indentation in file {0} at line {1}:{2}", this.filename, this.line_count, this.column_count));
                     }
                 }
                 
             }
-            
+            //back the index one character to allow for line content to be
+            //tokenized properly by tokenize_file
             this.decr();
         }
 
