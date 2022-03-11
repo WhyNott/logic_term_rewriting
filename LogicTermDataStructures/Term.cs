@@ -62,32 +62,44 @@ namespace LogicTermDataStructures {
 
         }
 
+        private static Dictionary<string, int> string_id_map = new Dictionary<string, int>();
+
+        private static int id_from_name(string name) {
+            
+            int id = Variable.top_free_id;
+            if (Variable.string_id_map.TryGetValue(name, out id)){
+                return id;
+
+            } else {
+                Variable.string_id_map.Add(name, id);
+                Variable.top_free_id++;
+                return id;
+            }
+            
+        }
+
         public Variable(string name, Context context, bool is_head) {
             this.name = name;
             this.context = context;
             this.is_head = is_head;
-            this.id = Variable.top_free_id;
+            this.id = Variable.id_from_name(name);
             
-            Variable.top_free_id++;
         }
 
         public Variable(Context context, bool is_head) {
             this.context = context;
             this.is_head = is_head;
-            this.id = Variable.top_free_id;
-
             this.name = "unn_" + this.id;
             
-            Variable.top_free_id++;
+            this.id = Variable.id_from_name(this.name);
+               
         }
 
         public Variable(string name, Context context) {
             this.name = name;
             this.context = context;
             this.is_head = false;
-            this.id = Variable.top_free_id;
-            
-            Variable.top_free_id++;
+            this.id = Variable.id_from_name(this.name);
         }
 
         public void Deconstruct(out string name, out Context context,
