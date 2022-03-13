@@ -187,7 +187,6 @@ namespace LogicTermRewriting
                 switch (element) {
                     case LogicTermSentence _:
                         var new_variable = new Variable(
-                            i.ToString(),
                             element.context,
                             true
                         );

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using LogicTermDataStructures;
 using TermVariable = LogicTermDataStructures.Variable;
@@ -171,7 +172,6 @@ namespace Parser {
 
         public void parse_document() {
             this.symbols.Push(new MapSymbol());
-            //this.ast.Push(new List<(Term, Element)>());
             
             while (this.symbols.Count > 0) {
                 Symbol s = this.symbols.Pop();
@@ -408,8 +408,128 @@ namespace Parser {
             
         }
         
+        public static Dictionary<string, Clause> join_clauses_of_same_predicate(Clause[] clause_list){
+            //aggregate the clauses by predicate
+            Dictionary<string, List<Clause>> clauses =
+                clause_list.Aggregate(new Dictionary<string, List<Clause>>(), (map, clause) => {
+                    if (!map.TryAdd(clause.head.name,
+                                    new List<Clause>(
+                                        new Clause[]{clause}
+                                    ))
+                    ) {
+                        map[clause.head.name].Add(clause);
+                    }
+                    return map;
+                });
+            
 
+            //map of values to be returned
+            Dictionary<string, Clause> ret_map = new Dictionary<string, Clause>();
 
+            //we iterate on every individual predicate
+            foreach (KeyValuePair<string, List<Clause>> entry
+                     in clauses) {
+                //if there is only one clause of the predicate, there is nothing to join
+                if (entry.Value.Count == 1) {
+                    ret_map.Add(entry.Key, entry.Value[0]);
+                    continue;
+                }
+
+                Sentence head = entry.Value[0].head;
+                var predicate_clauses = new List<LogicVerb>();
+
+                //if the head of the predicate has no arguments,
+                //we just need to gather all the clause bodies
+                if (head.elements.Length == 0) {
+                    foreach (var clause in entry.Value){
+                        if (clause.body is Or){
+                            predicate_clauses.AddRange(
+                                ((Or) clause.body).contents
+                            );
+                        } else if (clause.body != null) {
+                            predicate_clauses.Add(clause.body);
+                        }
+                    }
+
+                    ret_map.Add(entry.Key,
+                                new Clause(
+                                    head,
+                                    new Or(predicate_clauses.ToArray()),
+                                    head.context
+                                )
+                    );
+
+                    continue;
+                }
+
+                //if predicate head has arguments, we need to
+                //generate n fresh variables to replace them
+                
+                var head_variables = new List<TermVariable>();
+                
+                for (int i =0; i < head.elements.Length; i++){
+                    head_variables.Add(
+                        new TermVariable(head.context, true));
+                }
+                
+                //iterate on all the clauses of a predicate
+                foreach (var clause in entry.Value){
+                    var new_clause_body = new List<LogicVerb>();
+                    //for each clause, unify all arguments with
+                    //the fresh variables in the predicate head
+                    for (int i = 0; i < head.elements.Length; i++){
+                        new_clause_body.Add(
+                            new PredicateCall(
+                                new Sentence(
+                                    "{} = {}",
+                                    new Term[] {
+                                        head_variables[i],
+                                        clause.head.elements[i]
+                                    },
+                                    clause.head.context
+                                )
+                            )
+                        );
+                        
+                    }
+
+                    if (clause.body is And){
+                        new_clause_body.AddRange(
+                            ((And) clause.body).contents
+                        );
+                    } else if (clause.body != null) {
+                        new_clause_body.Add(clause.body);
+                    }
+
+                    predicate_clauses.Add(
+                        new And(
+                            new_clause_body.ToArray()
+                        )
+                    );
+
+                }
+                
+                ret_map.Add(entry.Key,
+                            new Clause(
+                                new Sentence(
+                                    head.name,
+                                    head_variables.ToArray(),
+                                    head.context
+                                ),
+                                new Or(
+                                    predicate_clauses.ToArray()
+                                ),
+                                head.context
+                            )
+                );
+                
+                
+            }
+
+            return ret_map;
+
+        }
+        
 
     }
 

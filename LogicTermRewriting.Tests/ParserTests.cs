@@ -46,9 +46,12 @@ namespace LogicTermRewriting.Tests {
 
             p.parse_document();
 
-            var clauses = p.ast_to_clauses();
+            var clauses = ASTParser.join_clauses_of_same_predicate(p.ast_to_clauses().ToArray());
 
-            foreach (Clause c in clauses){
+            foreach (KeyValuePair<string, Clause> entry in clauses){
+                Console.WriteLine(entry.Key);
+                Clause c = entry.Value;
+            
                 //    Console.WriteLine(c);
 
                 VariableExtractor ve = new VariableExtractor();

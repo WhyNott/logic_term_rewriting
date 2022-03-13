@@ -66,11 +66,12 @@ namespace LogicTermDataStructures {
 
         private static int id_from_name(string name) {
             
-            int id = Variable.top_free_id;
+            int id = 0;
             if (Variable.string_id_map.TryGetValue(name, out id)){
                 return id;
 
             } else {
+                id = Variable.top_free_id;
                 Variable.string_id_map.Add(name, id);
                 Variable.top_free_id++;
                 return id;
@@ -89,7 +90,7 @@ namespace LogicTermDataStructures {
         public Variable(Context context, bool is_head) {
             this.context = context;
             this.is_head = is_head;
-            this.name = "unn_" + this.id;
+            this.name = "unn_" + Variable.top_free_id;
             
             this.id = Variable.id_from_name(this.name);
                
