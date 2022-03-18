@@ -7,7 +7,7 @@ namespace Runtime {
         public static int global_id_counter = 0;
         private static Stack<RuntimeTerm> program_stack = new Stack<RuntimeTerm>();
         private static Stack<int> last_choice_point = new Stack<int>();
-        public static Stack<int> last_id_counter = new Stack<int>();
+        public static Stack<int> last_id_counter = new Stack<int>(new int[] {0});
 
         public static void new_choice_point(){
             Trail.last_choice_point.Push(Trail.program_stack.Count);

@@ -20,15 +20,15 @@ namespace LogicTermRewriting.Tests {
 
             var contents = new LogicVerb[] {
                 new PredicateCall(
-                    new LogicTermSentence("father", new Term[] {Y, X}, TestingData.fake_context)
+                    new LogicTermSentence("{} is father of {}", new Term[] {Y, X}, TestingData.fake_context)
                 ),
                 new PredicateCall(
-                    new LogicTermSentence("male", new Term[] {X}, TestingData.fake_context)
+                    new LogicTermSentence("{} is male", new Term[] {X}, TestingData.fake_context)
                 ),
             };
             
             return new Clause(
-                new LogicTermSentence("son", new Term[] {X, Y}, TestingData.fake_context),
+                new LogicTermSentence("{} is son of {}", new Term[] {X, Y}, TestingData.fake_context),
                 new And(contents),
                 TestingData.fake_context
             );
@@ -76,7 +76,7 @@ namespace LogicTermRewriting.Tests {
             };
             
             return new Clause(
-                new LogicTermSentence("father", new Term[] {X, Y}, TestingData.fake_context),
+                new LogicTermSentence("{} is father of {}", new Term[] {X, Y}, TestingData.fake_context),
                 new Or(contents),
                 TestingData.fake_context
             );
@@ -112,7 +112,7 @@ namespace LogicTermRewriting.Tests {
             };
 
             return new Clause(
-                new LogicTermSentence("male", new Term[] {X}, TestingData.fake_context),
+                new LogicTermSentence("{} is male", new Term[] {X}, TestingData.fake_context),
                 new Or(contents),
                 TestingData.fake_context
             );
@@ -149,7 +149,7 @@ namespace LogicTermRewriting.Tests {
             cg.add_procedure(0);
             cg.add_procedure(1);
             cg.add_procedure(2);
-            cg.output_source_code("Test.cs");
+            cg.output_source_code("/home/janwanot/logic_term_rewriting/Test.csx");
 
 
         }

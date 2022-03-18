@@ -317,7 +317,7 @@ namespace Parser {
             
             //any other type should not be possible
             Debug.Fail("Unreachable code reached");
-                    throw new InvalidOperationException();
+            throw new InvalidOperationException();
         }
         
 

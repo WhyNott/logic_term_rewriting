@@ -25,7 +25,7 @@ namespace CodeGen {
             this.procedures = procedures;
 
             this.targetUnit = new CodeCompileUnit();
-            CodeNamespace langauage = new CodeNamespace("Language");
+            CodeNamespace langauage = new CodeNamespace();
             langauage.Imports.Add(new CodeNamespaceImport("System"));
             langauage.Imports.Add(new CodeNamespaceImport("Runtime"));
             this.targetClass = new CodeTypeDeclaration(
@@ -38,7 +38,22 @@ namespace CodeGen {
             this.targetUnit.Namespaces.Add(langauage);
         }
         
-
+        public string generate_procedure_table(){
+            StringBuilder table = new StringBuilder(
+                "var procedure_map = new Dictionary<string, Procedure> {\n"
+            );
+            foreach (var proc in this.procedures){
+                table.AppendFormat(
+                    "[\"{0}\"] = Comp_{1}.Procedure_{2},\n",
+                    proc.head.name,
+                    Identifier.current_compilation_unit,
+                    proc.head.id.id_num
+                );
+            }
+            table.Append("};\n");
+            return table.ToString();
+            
+        }
 
         public void add_procedure(int proc_num){
             var proc = this.procedures[proc_num];
@@ -50,14 +65,13 @@ namespace CodeGen {
             procedure_method.Comments.Add(
                 new CodeCommentStatement(new CodeComment(proc.head.name, false))
             );
+
+            procedure_method.Parameters.Add(
+                new CodeParameterDeclarationExpression(
+                    new CodeTypeReference("RuntimeTerm[]"), "arguments"
+                )
+            );
             
-            foreach (var variable in proc.head.elements){
-                procedure_method.Parameters.Add(
-                     new CodeParameterDeclarationExpression(
-                         new CodeTypeReference("RuntimeTerm"), variable.name
-                     )
-                );
-            }
             
             
             procedure_method.Parameters.Add(
@@ -69,6 +83,18 @@ namespace CodeGen {
 
             StringBuilder snippet = new StringBuilder("//beginning of the procedure code\n", 500);
 
+            int arg_i = 0;
+            foreach (var variable in proc.head.elements){
+                snippet.AppendFormat(
+                    "var {0} = arguments[{1}];\n",
+                    variable.name,
+                    arg_i
+                );
+                arg_i++;
+            }
+            
+             
+            
             foreach (var variable in proc.variables){
                 snippet.AppendFormat(
                     "var {0} = RuntimeTerm.make_empty_variable(\"{0}\", null);\n",
@@ -164,7 +190,7 @@ namespace CodeGen {
                     
                 case Call c:
                     sb.AppendFormat(
-                        "Comp_{0}.Procedure_{1}(",
+                        "Comp_{0}.Procedure_{1}(new RuntimeTerm[] {{",
                         c.sentence.id.compilation_number,
                         c.sentence.id.id_num
                     );
@@ -172,7 +198,7 @@ namespace CodeGen {
                     foreach (var v in c.sentence.elements) {
                         sb.AppendFormat("{0},", v.name);
                     }
-                    sb.AppendFormat("cont_{0}); \n", c.next);
+                    sb.AppendFormat("}}, cont_{0}); \n", c.next);
                     break;
                     
                 case Conditional c:
@@ -213,11 +239,19 @@ namespace CodeGen {
             using (StreamWriter sw = new StreamWriter(file, false))
             {
                 IndentedTextWriter tw = new IndentedTextWriter(sw, "    ");
+
+                tw.WriteLine("#r \"Runtime.dll\"");
                 
+                
+
                 // Generate source code using the code provider.
                 provider.GenerateCodeFromCompileUnit(this.targetUnit, tw,
                                                      new CodeGeneratorOptions());
-                
+
+                tw.Write(this.generate_procedure_table());
+
+                tw.WriteLine("Toplevel.run_REPL(procedure_map);");
+
                 // Close the output file.
                 tw.Close();
             }

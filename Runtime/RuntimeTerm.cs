@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-
+using System.Text;
 namespace Runtime {
 
     public class RuntimeTerm {
@@ -11,6 +11,39 @@ namespace Runtime {
         public string name;
         public RuntimeTerm[] arguments = {};
         public int? copy_num = null;
+
+        public override string ToString(){
+            StringBuilder representation = new StringBuilder();
+            var term = this.dereferenced();
+            if (term.is_variable()){
+                representation.Append(term.name);
+            } else if (term.is_atom()) {
+                representation.Append("<");
+                representation.Append(term.name);
+                representation.Append(">"); 
+            } else {
+                representation.Append("<");
+                int i = 0;
+                foreach (char c in term.name) {
+                    if (c == '}')
+                        continue;
+
+                    if (c == '{') {
+                        representation.Append(
+                            term.arguments[i].ToString()
+                        );
+                        i++;
+                    } else {
+                        representation.Append(c);
+                    }
+                   
+                }
+                representation.Append(">");
+                
+            }
+            
+            return representation.ToString();
+        }
 
         public static RuntimeTerm make_empty_variable(
             string name, int? copy_num){
@@ -36,6 +69,7 @@ namespace Runtime {
             term.id = Trail.global_id_counter++;
             term.name = functor;
             term.model = model;
+            term.arguments = arguments;
             return term;
         }
         
@@ -53,7 +87,7 @@ namespace Runtime {
         }
 
         public bool is_atom(){
-            return (this.arguments == null || this.arguments.Length == 0);
+            return !this.is_variable() && (this.arguments == null || this.arguments.Length == 0);
         }
 
         public bool is_copy(){
@@ -146,7 +180,7 @@ namespace Runtime {
         public bool unify_with(RuntimeTerm other){
             var x = this.dereferenced();
             var y = other.dereferenced();
-
+                        
             if (x.is_atom() && y.is_atom()){
                 return x.name == y.name;
             } else if (x.is_variable() && !x.is_bound()) {
