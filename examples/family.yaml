@@ -1,0 +1,36 @@
+# Adapted from "Art of Prolog", programs 1.1-1.2
+  Predicates:
+    - (Terach) is the father of (Abraham)
+    - (Terach) is the father of (Nachor)
+    - (Terach) is the father of (Haran)
+
+    - (Abraham) is the father of (Isaac)
+
+    - (Haran) is the father of (Lot)
+    - (Haran) is the father of (Milcah)
+    - (Haran) is the father of (Yiscah)
+
+    - (Sarah) is the mother of (Isaac)
+
+    - (Terach) is male
+    - (Abraham) is male
+    - (Nachor) is male
+    - (Haran) is male
+    - (Isaac) is male
+    - (Lot) is male
+
+    - (Sarah) is female
+    - (Milcah) is female
+    - (Yiscah) is female
+
+    -
+      ?X is son of ?Y:
+        and:
+          - ?Y is the father of ?X
+          - ?X is male
+
+    -
+      ?X is daughter of ?Y:
+        and:
+          - ?Y is the father of ?X
+          - ?X is female

@@ -1,0 +1,36 @@
+# Adapted from "Art of Prolog", programs 3.1-3.9
+  Predicates:
+    - (0) is a natural number
+    -
+      (s of ?X) is a natural number:
+        and:
+          - ?X is a natural number
+        
+    -
+      (0) + ?X = ?X:
+        and:
+          - ?X is a natural number
+        
+    -
+      (s of ?X) + ?Y = (s of ?Z):
+        and:
+          - ?X + ?Y = ?Z
+
+
+    - (0) * ?X = (0)
+
+    -
+      (s of ?X) * ?Y = ?Z:
+        and:
+          - ?X * ?Y = ?XY
+          - ?XY + ?Y = ?Z
+
+
+    - factorial of (0) is (s of (0))
+    
+    -
+      factorial of (s of ?N) is ?F:
+        and:
+          - factorial of ?N is ?F1
+          - (s of ?N) * ?F1 = ?F
+

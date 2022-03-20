@@ -57,6 +57,11 @@ namespace LogicTermDataStructures {
 
         private static int top_free_id = 0;
 
+        public override bool Equals(object obj){
+            Variable other = obj as Variable;
+            return other != null && this.id == other.id;
+        }
+
         public override int GetHashCode() {
             return this.id;
 

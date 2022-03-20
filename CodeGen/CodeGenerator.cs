@@ -55,6 +55,12 @@ namespace CodeGen {
             
         }
 
+        public void add_all_procedures(){
+            for (int i = 0; i < this.procedures.Length; i++){
+                this.add_procedure(i);
+            }
+        }
+
         public void add_procedure(int proc_num){
             var proc = this.procedures[proc_num];
             CodeMemberMethod procedure_method = new CodeMemberMethod();
@@ -96,6 +102,9 @@ namespace CodeGen {
              
             
             foreach (var variable in proc.variables){
+                if (variable.is_head) {
+                    continue;
+                }
                 snippet.AppendFormat(
                     "var {0} = RuntimeTerm.make_empty_variable(\"{0}\", null);\n",
                     variable.name
@@ -132,9 +141,8 @@ namespace CodeGen {
             if (s.elements.Length == 0) {
                 sb.AppendFormat("RuntimeTerm.make_atom(\"{0}\", false)", s.name);
             } else {
-                sb.AppendFormat("RuntimeTerm.make_structured_term(\"{0}\"", s.name);
+                sb.AppendFormat("RuntimeTerm.make_structured_term(\"{0}\", new RuntimeTerm [] {{", s.name);
                 foreach (var element in s.elements) {
-                    sb.Append(", ");
                     switch (element) {
                         case Variable v:
                             sb.AppendFormat("{0}", v.name);
@@ -144,8 +152,9 @@ namespace CodeGen {
                             break;
 
                     }
+                    sb.Append(", ");
                 }
-                sb.Append("false)");
+                sb.Append("}, false)");
             }
         }
         

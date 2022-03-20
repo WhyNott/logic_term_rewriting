@@ -177,7 +177,7 @@ namespace LogicTermRewriting
         List<Variable> head_variables = new List<Variable>();
         
         //all the variables in the clause except the head ones
-        HashSet<Variable> clause_variables = new HashSet<Variable>();
+        public HashSet<Variable> clause_variables = new HashSet<Variable>();
 
         
         public ClauseVariableExtracted extract_variables(Clause clause){
@@ -204,7 +204,7 @@ namespace LogicTermRewriting
 
             }
 
-
+            this.clause_variables.UnionWith(this.head_variables);
             
             var new_body = this.extract_variables(clause.body);
             

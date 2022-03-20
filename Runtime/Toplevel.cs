@@ -77,7 +77,9 @@ namespace Runtime {
                 
                 //find the delegate corresponding to the functor in the table
                 Procedure proc = procedure_map[query.name];
+                bool wait_for_answer = true;
                 Action print_variables = delegate (){
+                    
                     foreach (KeyValuePair<string, RuntimeTerm> entry in v_map) {
                         Console.WriteLine(
                             String.Format(
@@ -85,7 +87,16 @@ namespace Runtime {
                                 entry.Key,
                                 entry.Value
                             ));
+                        
                     }
+                    if (wait_for_answer) {
+                            string answer_input = Console.ReadLine();
+                            if (answer_input == "a") {
+                                wait_for_answer = false;
+                            } else if (answer_input == "quit"){
+                                System.Environment.Exit(0);
+                            }
+                        }
                     
                 };
 

@@ -1,0 +1,27 @@
+# Adapted from "Art of Prolog", program 2.2
+  Predicates:
+    - resistor from (power) to (n1)
+    - resistor from (power) to (n2)
+
+    - transistor with gate (n2), source (ground) and drain (n1)
+    - transistor with gate (n3), source (n4) and drain (n2)
+    - transistor with gate (n5), source (ground) and drain (n4)
+
+    -
+      inverter from ?Input is ?Output:
+        and:
+          - transistor with gate ?Input, source (ground) and drain ?Output
+          - resistor from (power) to ?Output
+
+    -
+      ?Input1 nand ?Input2 is ?Output:
+        and:
+          - transistor with gate ?Input1, source ?X and drain ?Output
+          - transistor with gate ?Input2, source (ground) and drain ?X
+          - resistor from (power) to ?Output
+
+    -
+      ?Input1 and ?Input2 is ?Output:
+        and:
+          - ?Input1 nand ?Input2 is ?X
+          - inverter from ?X is ?Output
