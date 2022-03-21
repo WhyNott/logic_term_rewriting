@@ -63,33 +63,35 @@ namespace Runtime {
         public static void run_REPL(Dictionary<string, Procedure> procedure_map){
             bool run = true;
             while (run) {
+                Console.Write("query> ");
                 //load string from STDIN
                 string input = Console.ReadLine();
                 if (input == "quit")
                     break;
-
-                //parse it
-                Dictionary<string, RuntimeTerm> v_map = new Dictionary<string, RuntimeTerm>();
-                int index = 0;
-                RuntimeTerm query = Toplevel.parse_query(input, ref index, v_map);
+                else if (input.Length > 0 && input[0] == '<') {
+                    //parse it
+                    Dictionary<string, RuntimeTerm> v_map = new Dictionary<string, RuntimeTerm>();
+                    int index = 0;
+                    RuntimeTerm query = Toplevel.parse_query(input, ref index, v_map);
 
 
                 
-                //find the delegate corresponding to the functor in the table
-                Procedure proc = procedure_map[query.name];
-                bool wait_for_answer = true;
-                Action print_variables = delegate (){
-                    
-                    foreach (KeyValuePair<string, RuntimeTerm> entry in v_map) {
-                        Console.WriteLine(
-                            String.Format(
-                                "{0}: {1}",
-                                entry.Key,
-                                entry.Value
-                            ));
+                    //find the delegate corresponding to the functor in the table
+                    Procedure proc = procedure_map[query.name];
+                    bool wait_for_answer = true;
+                    Action print_variables = delegate (){
+                        Console.WriteLine("yes");
+                        foreach (KeyValuePair<string, RuntimeTerm> entry in v_map) {
+                            Console.WriteLine(
+                                String.Format(
+                                    "{0}: {1}",
+                                    entry.Key,
+                                    entry.Value
+                                ));
                         
-                    }
-                    if (wait_for_answer) {
+                        }
+                        if (wait_for_answer) {
+                            Console.Write("answers> ");
                             string answer_input = Console.ReadLine();
                             if (answer_input == "a") {
                                 wait_for_answer = false;
@@ -97,12 +99,15 @@ namespace Runtime {
                                 System.Environment.Exit(0);
                             }
                         }
-                    
-                };
+                        
+                    };
 
-                //Call it with the parsed parameters
-                proc(query.arguments, print_variables);
-                
+                    //Call it with the parsed parameters
+                    proc(query.arguments, print_variables);
+                    Console.WriteLine("no");
+                } else {
+                    Console.WriteLine("Invalid query!");
+                }
             }
 
         }

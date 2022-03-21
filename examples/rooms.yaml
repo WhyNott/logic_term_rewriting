@@ -1,0 +1,25 @@
+#Demonstration of symmetric and transitive relations between rooms
+  Predicates:
+    - (bedroom) leads to (living room)
+    - (kitchen) leads to (living room)
+    - (bathroom) leads to (corridor)
+    - (corridor) leads to (living room)
+    - (entryway) leads to (corridor)
+    - (tarrace) leads to (entryway)
+    # not connected to any part of the house
+    - (anger) leads to (hate)
+     
+    - 
+     ?RoomA is connected to ?RoomB:
+         or:
+           - ?RoomA leads to ?RoomB
+           - ?RoomB leads to ?RoomA
+   
+    - 
+     ?RoomA can be walked to from ?RoomB:
+         or:
+          - ?RoomA is connected to ?RoomB
+          - 
+           and:
+               - ?RoomA is connected to ?RoomC
+               - ?RoomC can be walked to from ?RoomB
