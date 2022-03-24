@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicTermRewriting", "LogicTermRewriting\LogicTermRewriting.csproj", "{6128B463-A894-482D-901A-1C072C5720F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicTermRewriting.Tests", "LogicTermRewriting.Tests\LogicTermRewriting.Tests.csproj", "{57005E82-B080-45A9-BAA0-BA6B7C833B0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{57005E82-B080-45A9-BAA0-BA6B7C833B0A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogicTermDataStructures", "LogicTermDataStructures\LogicTermDataStructures.csproj", "{14B6E0A3-D1D3-42BA-B14C-3E82B3989D7E}"
 EndProject
